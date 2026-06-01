@@ -1,0 +1,21 @@
+# Python Caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Ambientes Virtuais
+venv/
+.venv/
+env/
+ENV/
+
+# Credenciais e Segredos (CRÍTICO: Não subir para o GitHub!)
+credentials.json
+.env
+.env.local
+
+# IDEs e Ferramentas
+.vscode/
+.idea/
+.DS_Store

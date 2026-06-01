@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AGT Logistics - ERP de Logística Reversa & Estoque Preditivo</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome para ícones premium -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- SIDEBAR DE NAVEGAÇÃO -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-icon"><i class="fa-solid fa-plane-arrival"></i></div>
+                <div class="logo-text">
+                    <h1>AGT Logistics</h1>
+                    <span>Pilot Operations v2</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                <button class="menu-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Painel de Eventos</span>
+                </button>
+                <button class="menu-item" data-tab="estoque">
+                    <i class="fa-solid fa-warehouse"></i>
+                    <span>Estoque & Compras</span>
+                </button>
+                <button class="menu-item" data-tab="cadastros">
+                    <i class="fa-solid fa-folder-plus"></i>
+                    <span>Cadastros Operacionais</span>
+                </button>
+                <button class="menu-item" data-tab="status">
+                    <i class="fa-solid fa-network-wired"></i>
+                    <span>Status Conexão</span>
+                </button>
+                <a href="dashboard.html" class="menu-item link-rpg" style="text-decoration: none; color: #ffd700; border-top: 1px dashed rgba(255, 215, 0, 0.3); margin-top: 10px; padding-top: 15px;">
+                    <i class="fa-solid fa-crown gold-glow"></i>
+                    <span style="font-weight: bold;">Quest de Gestão RPG</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="dot pulse green"></span>
+                    <span id="conn-text">Conectado ao Backend</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="main-content">
+            
+            <!-- SEÇÃO: DASHBOARD OPERACIONAL -->
+            <section id="tab-dashboard" class="tab-content active">
+                <header class="content-header">
+                    <div>
+                        <h2>Painel Operacional de Eventos</h2>
+                        <p>Acompanhamento conversacional dos pedidos ativos, coletas físicas e triagem logística reversa.</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" id="btn-cron-quarta">
+                            <i class="fa-solid fa-calendar-day"></i> Rodar Balanceador Preditivo
+                        </button>
+                        <button class="btn btn-secondary" id="btn-cron-reversa">
+                            <i class="fa-solid fa-rotate-left"></i> Simular Pós-Evento (Reversa)
+                        </button>
+                        <button class="btn btn-primary" id="btn-novo-pedido">
+                            <i class="fa-solid fa-plus"></i> Novo Pedido
+                        </button>
+                    </div>
+                </header>
+
+                <!-- KPI CARDS -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-icon blue"><i class="fa-solid fa-boxes-stacked"></i></div>
+                        <div class="kpi-info">
+                            <h3>Total de Pedidos</h3>
+                            <span class="kpi-value" id="kpi-total-pedidos">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon orange"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                        <div class="kpi-info">
+                            <h3>SLA Violado Rate</h3>
+                            <span class="kpi-value" id="kpi-sla-rate">0%</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-icon red"><i class="fa-solid fa-calculator"></i></div>
+                        <div class="kpi-info">
+                            <h3>Custo Depreciação</h3>
+                            <span class="kpi-value" id="kpi-depreciacao">R$ 0,00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ALERTAS DO SISTEMA (BALANCEADOR PREDITIVO) -->
+                <div id="alerta-balanceador" class="alert-container hidden">
+                    <div class="alert-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="alert-content">
+                        <h4>Alerta Preditivo - Auditor do Estoque</h4>
+                        <p id="alerta-balanceador-msg"></p>
+                        <div id="alerta-balanceador-checklist" class="checklist-items mt-2"></div>
+                    </div>
+                    <button class="alert-close-btn" onclick="fecharAlerta()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <!-- PIPELINE KANBAN OPERACIONAL -->
+                <div class="kanban-board">
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <span class="column-title">A Separar</span>
+                            <span class="badge" id="badge-a-separar">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-a-separar"></div>
+                    </div>
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <span class="column-title">Enviado</span>
+                            <span class="badge" id="badge-enviado">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-enviado"></div>
+                    </div>
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <span class="column-title">Reversa Pendente</span>
+                            <span class="badge" id="badge-reversa">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-reversa"></div>
+                    </div>
+                    <div class="kanban-column">
+                        <div class="column-header">
+                            <span class="column-title">Concluído</span>
+                            <span class="badge" id="badge-concluido">0</span>
+                        </div>
+                        <div class="kanban-cards" id="column-concluido"></div>
+                    </div>
+                </div>
+
+                <!-- PAINEL DE RASTREABILIDADE DE ATIVOS (Em Casa vs Na Rua) -->
+                <div class="card glass mb-4" id="painel-rastreabilidade" style="border-color: rgba(0, 210, 255, 0.15); margin-top: 30px; margin-bottom: 25px;">
+                    <div class="flex-header">
+                        <h3 class="text-primary"><i class="fa-solid fa-arrows-spin text-primary"></i> Rastreabilidade de Ativos (Estoque Local vs Em Trânsito)</h3>
+                        <span class="text-xs text-muted" style="font-size: 11px;">Mapeamento inteligente para separação e Logística Reversa</span>
+                    </div>
+                    <p class="text-muted mt-1 text-xs" style="font-size: 12px; margin-top: 5px; margin-bottom: 12px;">Visualização em tempo real de ativos no estoque físico ("Em Casa") vs alocados nos treinamentos ("Na Rua"). O agente calcula automaticamente se a reversa de um item deve ser priorizada para suprir demandas de novos pedidos.</p>
+                    
+                    <div id="alertas-prioridade-reversa" class="hidden" style="background: rgba(255, 165, 2, 0.05); border-left: 4px solid var(--color-warning); padding: 12px; border-radius: 6px; margin-bottom: 15px;">
+                        <!-- Alertas dinâmicos pelo JS -->
+                    </div>
+
+                    <div class="table-container" style="max-height: 250px; overflow-y: auto;">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Item</th>
+                                    <th>Tipo</th>
+                                    <th class="text-center" style="text-align: center;">Em Casa (Estoque)</th>
+                                    <th class="text-center" style="text-align: center;">Na Rua (Treinamentos)</th>
+                                    <th class="text-center" style="text-align: center;">Demanda Futura</th>
+                                    <th>Status Reversa & Recomendações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-rastreabilidade">
+                                <!-- Preenchido por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO: GESTÃO DE ESTOQUE & COMPRAS PREDITIVAS (Seção D) -->
+            <section id="tab-estoque" class="tab-content">
+                <header class="content-header">
+                    <div>
+                        <h2>Gestão de Estoque & Suprimentos</h2>
+                        <p>Acompanhe o saldo físico dos seus materiais e as sugestões automáticas de compras calculadas pela IA.</p>
+                    </div>
+                </header>
+
+                <div class="grid-layout" style="grid-template-columns: 1fr 1fr;">
+                    
+                    <!-- TABELA DE SALDO FÍSICO -->
+                    <div class="card glass">
+                        <div class="flex-header">
+                            <h3>Estoque Físico Atual</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="abrirReporEstoque()">
+                                <i class="fa-solid fa-plus"></i> Repor Item
+                            </button>
+                        </div>
+                        <div class="table-container mt-4">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Descrição do Item</th>
+                                        <th>Tipo</th>
+                                        <th>Qtd. Saldo</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-estoque"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- SUGESTÕES DE COMPRAS DO AGENTE PREDITIVO (Seção D) -->
+                    <div class="card glass" style="border-color: rgba(5, 255, 200, 0.15);">
+                        <div class="flex-header">
+                            <h3 class="text-success"><i class="fa-solid fa-brain"></i> IA de Suprimentos (Sugestões de Compras)</h3>
+                            <button class="btn btn-secondary btn-sm" onclick="carregarComprasPreditivas()">
+                                <i class="fa-solid fa-rotate"></i> Recalcular
+                            </button>
+                        </div>
+                        <p class="text-muted mt-2">O Agente analisa os pedidos ativos ('A_SEPARAR'), soma a demanda básica + insumos extras, cruza com o saldo atual do estoque e indica o que precisa ser comprado para viabilizar os envios sem rupturas.</p>
+                        
+                        <div class="table-container mt-4">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Descrição do Item</th>
+                                        <th>Demanda</th>
+                                        <th>Estoque</th>
+                                        <th class="text-danger">Comprar (Falta)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-sugestoes-compras"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO: CADASTROS OPERACIONAIS (Seção A) -->
+            <section id="tab-cadastros" class="tab-content">
+                <header class="content-header">
+                    <div>
+                        <h2>Módulos de Cadastros Operacionais</h2>
+                        <p>Configure os consultores, tipos de treinamentos, kits e o catálogo de materiais.</p>
+                    </div>
+                </header>
+
+                <!-- ABAS INTERNAS DE CADASTRO -->
+                <div class="sub-tabs mb-4">
+                    <button class="sub-tab-btn active" data-subtab="sub-consultores">👥 Consultores</button>
+                    <button class="sub-tab-btn" data-subtab="sub-treinamentos">📚 Treinamentos</button>
+                    <button class="sub-tab-btn" data-subtab="sub-equipamentos">⚙️ Equipamentos</button>
+                    <button class="sub-tab-btn" data-subtab="sub-insumos">📝 Insumos</button>
+                    <button class="sub-tab-btn" data-subtab="sub-kits">📦 Composição de Materiais</button>
+                </div>
+
+                <!-- SUB-ABA: CONSULTORES -->
+                <div id="subtab-sub-consultores" class="subtab-content active">
+                    <div class="grid-layout">
+                        <div class="card glass">
+                            <h3>Adicionar Consultor</h3>
+                            <form id="form-consultor">
+                                <div class="form-group">
+                                    <label for="c-codigo">Código do Consultor *</label>
+                                    <input type="text" id="c-codigo" placeholder="Ex: C03" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="c-nome">Nome Completo *</label>
+                                    <input type="text" id="c-nome" placeholder="Ex: Rodrigo Cruz" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="c-cpf">CPF *</label>
+                                    <input type="text" id="c-cpf" placeholder="Ex: 111.222.333-44" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block">Salvar Consultor</button>
+                            </form>
+                        </div>
+                        <div class="card glass">
+                            <h3>Consultores Cadastrados</h3>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Nome</th>
+                                            <th>CPF</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-consultores"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-ABA: TREINAMENTOS -->
+                <div id="subtab-sub-treinamentos" class="subtab-content">
+                    <div class="grid-layout">
+                        <div class="card glass">
+                            <h3>Adicionar Tipo de Treinamento</h3>
+                            <form id="form-treinamento">
+                                <div class="form-group">
+                                    <label for="t-codigo">Código do Treinamento *</label>
+                                    <input type="text" id="t-codigo" placeholder="Ex: TR-DATA" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="t-descricao">Descrição do Treinamento *</label>
+                                    <input type="text" id="t-descricao" placeholder="Ex: Treinamento de Ciência de Dados" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block">Salvar Treinamento</button>
+                            </form>
+                        </div>
+                        <div class="card glass">
+                            <h3>Tipos de Treinamentos Cadastrados</h3>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Descrição</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-treinamentos"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-ABA: EQUIPAMENTOS -->
+                <div id="subtab-sub-equipamentos" class="subtab-content">
+                    <div class="grid-layout">
+                        <div class="card glass">
+                            <h3>Adicionar Equipamento</h3>
+                            <form id="form-equipamento">
+                                <div class="form-group">
+                                    <label for="eq-codigo">Código do Equipamento *</label>
+                                    <input type="text" id="eq-codigo" placeholder="Ex: EQ-NOTE" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="eq-desc">Descrição do Equipamento *</label>
+                                    <input type="text" id="eq-desc" placeholder="Ex: Notebook Core i7" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="eq-peso">Peso (kg) *</label>
+                                    <input type="number" id="eq-peso" min="0" step="0.1" placeholder="Ex: 2.1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="eq-tamanho">Tamanho (Dimensões) *</label>
+                                    <input type="text" id="eq-tamanho" placeholder="Ex: 35x25x2 cm" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block">Salvar Equipamento</button>
+                            </form>
+                        </div>
+                        <div class="card glass">
+                            <h3>Catálogo de Equipamentos</h3>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Descrição</th>
+                                            <th>Peso</th>
+                                            <th>Tamanho</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-equipamentos"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-ABA: INSUMOS -->
+                <div id="subtab-sub-insumos" class="subtab-content">
+                    <div class="grid-layout">
+                        <div class="card glass">
+                            <h3>Adicionar Insumo</h3>
+                            <form id="form-insumo">
+                                <div class="form-group">
+                                    <label for="ins-codigo">Código do Insumo *</label>
+                                    <input type="text" id="ins-codigo" placeholder="Ex: INS-POST" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="ins-desc">Descrição do Insumo *</label>
+                                    <input type="text" id="ins-desc" placeholder="Ex: Bloco de Post-it" required>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-block">Salvar Insumo</button>
+                            </form>
+                        </div>
+                        <div class="card glass">
+                            <h3>Catálogo de Insumos</h3>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Descrição</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-insumos"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SUB-ABA: CONFIGURAR ITENS DO TREINAMENTO -->
+                <div id="subtab-sub-kits" class="subtab-content">
+                    <div class="grid-layout" style="grid-template-columns: 400px 1fr;">
+                        <div class="card glass">
+                            <h3>Composição do Treinamento</h3>
+                            <p class="text-muted mb-4">Selecione o Treinamento e configure até 5 equipamentos e até 3 insumos de separação obrigatória.</p>
+                            <form id="form-kit">
+                                <div class="form-group">
+                                    <label for="k-codigo">Treinamento Cadastrado *</label>
+                                    <select id="k-codigo" required>
+                                        <option value="">Selecione o Treinamento...</option>
+                                    </select>
+                                </div>
+                                <input type="hidden" id="k-desc" value="Composição Padrão">
+                                
+                                <div class="form-group">
+                                    <label>Equipamentos (Máximo 5):</label>
+                                    <div class="selection-box-group" id="k-equipamentos-checks"></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Insumos (Máximo 3):</label>
+                                    <div class="selection-box-group" id="k-insumos-checks"></div>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary btn-block">Salvar Composição</button>
+                            </form>
+                        </div>
+                        <div class="card glass">
+                            <h3>Relação de Itens por Treinamento</h3>
+                            <div class="table-container">
+                                <table>
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Treinamento</th>
+                                            <th>Equipamentos (Até 5)</th>
+                                            <th>Insumos (Até 3)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-kits"></tbody>
+                                </table>
+                             </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEÇÃO: STATUS DA CONEXÃO -->
+            <section id="tab-status" class="tab-content">
+                <header class="content-header">
+                    <div>
+                        <h2>Status de Conexão e Integridade</h2>
+                        <p>Audite os componentes ativos no ecossistema da POC de Logística Reversa.</p>
+                    </div>
+                </header>
+
+                <div class="card glass max-width-md">
+                    <h3>Componentes de Tecnologia</h3>
+                    <div class="status-list mt-4">
+                        <div class="status-row">
+                            <span>Interface Web Front-end</span>
+                            <span class="status-badge green">ATIVO</span>
+                        </div>
+                        <div class="status-row">
+                            <span>Orchestrator API Backend</span>
+                            <span class="status-badge green" id="status-api">VERIFICANDO...</span>
+                        </div>
+                        <div class="status-row">
+                            <span>Base de Armazenamento (DB)</span>
+                            <span class="status-badge text-right" id="status-db">VERIFICANDO...</span>
+                        </div>
+                        <div class="status-row">
+                            <span>Motor Cognitivo de IA</span>
+                            <span class="status-badge text-right" id="status-ai">VERIFICANDO...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- MODAL 1: NOVO PEDIDO (AGENTE 1 - SLA + INSUMOS EXTRAS) -->
+    <div class="modal" id="modal-pedido">
+        <div class="modal-content glass" style="width: 550px;">
+            <div class="modal-header">
+                <h3>Solicitar Kit de Treinamento (Seção B)</h3>
+                <button class="modal-close" onclick="fecharModal('modal-pedido')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-pedido">
+                <div class="form-group">
+                    <label for="p-consultor">Consultor Responsável *</label>
+                    <select id="p-consultor" required>
+                        <option value="">Selecione o Consultor...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="p-treinamento-tipo">Tipo de Treinamento *</label>
+                    <select id="p-treinamento-tipo" onchange="autoPreencherMateriaisDoTreinamento()" required>
+                        <option value="">Selecione o Treinamento...</option>
+                    </select>
+                </div>
+                
+                <div class="grid-layout" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 0;">
+                    <div class="form-group">
+                        <label for="p-data">Data do Evento *</label>
+                        <input type="date" id="p-data" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="p-alunos">Qtd. de Alunos *</label>
+                        <input type="number" id="p-alunos" min="1" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="p-local">Local de Entrega *</label>
+                    <input type="text" id="p-local" placeholder="Ex: Av. Paulista, 1000 - São Paulo" required>
+                </div>
+
+                <!-- Lista de itens do treinamento exibida automaticamente -->
+                <div class="card glass p-3 mb-3 bg-dark-opacity" id="p-composição-do-kit-display" style="padding: 15px !important;">
+                    <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Itens Obrigatórios do Treinamento</span>
+                    <div id="p-kit-equipamentos-itens" class="text-xs mt-2" style="font-size: 12px;">Nenhum treinamento selecionado.</div>
+                    <div id="p-kit-insumos-itens" class="text-xs mt-1" style="font-size: 12px;"></div>
+                </div>
+
+                <!-- Campo de Insumos Extras Solicitados (Seção B) -->
+                <div class="form-group">
+                    <label for="p-insumos-extras">Novos Insumos Solicitados (Códigos separados por vírgula)</label>
+                    <input type="text" id="p-insumos-extras" placeholder="Ex: INS-POST, INS-PAP (Opcional)">
+                </div>
+
+                <!-- ALERTA DO PORTEIRO DE SLA -->
+                <div id="sla-warning" class="sla-warning-box hidden">
+                    <div class="warning-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="warning-content">
+                        <strong>Alerta do Agente 1 (Porteiro do SLA):</strong>
+                        <p id="sla-warning-msg"></p>
+                    </div>
+                </div>
+
+                <!-- JUSTIFICATIVA DE QUEBRA DE SLA -->
+                <div id="group-justificativa" class="form-group hidden">
+                    <label for="p-justificativa" class="text-warning">Justificativa Corporativa de Urgência Obrigatória *</label>
+                    <textarea id="p-justificativa" placeholder="Ex: Cliente fechou o treinamento ontem no final do dia..." rows="2"></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModal('modal-pedido')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btn-submit-pedido">Validar e Solicitar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: EXPEDIÇÃO (AGENTE 2 - TRAVA COM CHECKLIST REAL) -->
+    <div class="modal" id="modal-expedicao">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3>Controle de Expedição do Estoque (Agente 2)</h3>
+                <button class="modal-close" onclick="fecharModal('modal-expedicao')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-expedicao">
+                <input type="hidden" id="exp-id-pedido">
+                <p class="mb-4">Auditoria física do Agente 2. Confirme os itens de conformidade para autorizar o despacho do pedido <strong id="exp-id-display"></strong>:</p>
+                
+                <div class="checklist-items mb-4" id="exp-checklist-group"></div>
+                
+                <div class="form-group">
+                    <label for="exp-rastreio">Código de Rastreio / Protocolo de Coleta Física *</label>
+                    <input type="text" id="exp-rastreio" placeholder="Ex: RX123456789BR" required>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModal('modal-expedicao')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Autorizar e Despachar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: RETORNO E TRIAGEM FÍSICA (SEÇÕES C & D) -->
+    <div class="modal" id="modal-triagem">
+        <div class="modal-content glass" style="width: 520px;">
+            <div class="modal-header">
+                <h3>Retorno de Treinamento e Triagem (Seção C)</h3>
+                <button class="modal-close" onclick="fecharModal('modal-triagem')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-triagem">
+                <input type="hidden" id="tria-id-pedido">
+                
+                <!-- Dados da Coleta Reversa (Seção C) -->
+                <h4 style="font-size: 13px; text-transform: uppercase; color: var(--color-primary); border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 6px; margin-bottom: 12px;">1. Dados do Retorno Físico</h4>
+                <div class="form-group">
+                    <label for="tria-local-retirada">Local da Retirada / Coleta *</label>
+                    <input type="text" id="tria-local-retirada" placeholder="Ex: Hotel Plaza - Sala 4" required>
+                </div>
+                <div class="grid-layout" style="grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 0;">
+                    <div class="form-group">
+                        <label for="tria-data-retirada">Data da Retirada *</label>
+                        <input type="date" id="tria-data-retirada" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tria-hora-retirada">Hora da Retirada *</label>
+                        <input type="time" id="tria-hora-retirada" required>
+                    </div>
+                </div>
+
+                <!-- Triagem do Kit (Danos / Atrasos) -->
+                <h4 class="mt-4" style="font-size: 13px; text-transform: uppercase; color: var(--color-primary); border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 6px; margin-bottom: 12px;">2. Triagem e Conferência do Kit</h4>
+                
+                <div class="form-group">
+                    <label>Houve atraso no recebimento? *</label>
+                    <div class="radio-group mt-2">
+                        <label><input type="radio" name="tria-atrasado" value="sim" onchange="toggleAtrasoGroup(true)" required> Sim</label>
+                        <label><input type="radio" name="tria-atrasado" value="nao" onchange="toggleAtrasoGroup(false)" checked> Não</label>
+                    </div>
+                </div>
+
+                <div class="form-group hidden" id="tria-atraso-grupo">
+                    <label for="tria-culpa">Responsabilidade pelo atraso: *</label>
+                    <select id="tria-culpa">
+                        <option value="Consultor">Consultor (Esqueceu de despachar)</option>
+                        <option value="Cliente">Cliente (Reteve materiais)</option>
+                        <option value="Logistica">Transportadora / Logística</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Houve avarias nos equipamentos ou insumos faltantes? *</label>
+                    <div class="radio-group mt-2">
+                        <label><input type="radio" name="tria-avariado" value="sim" onchange="toggleCustoGroup(true)" required> Sim</label>
+                        <label><input type="radio" name="tria-avariado" value="nao" onchange="toggleCustoGroup(false)" checked> Não</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Faltam consumíveis na contagem física? *</label>
+                    <div class="radio-group mt-2">
+                        <label><input type="radio" name="tria-faltantes" value="sim" onchange="toggleCustoGroup(true)" required> Sim</label>
+                        <label><input type="radio" name="tria-faltantes" value="nao" onchange="toggleCustoGroup(false)" checked> Não</label>
+                    </div>
+                </div>
+
+                <div class="form-group hidden" id="tria-custo-grupo">
+                    <label for="tria-custo">Custo Financeiro Estimado da Perda (R$) *</label>
+                    <input type="number" id="tria-custo" min="0" step="0.01" value="0.00">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModal('modal-triagem')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Registrar Retorno & Finalizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: REPOR ITEM EM ESTOQUE -->
+    <div class="modal" id="modal-repor-estoque">
+        <div class="modal-content glass">
+            <div class="modal-header">
+                <h3>Repor Item em Estoque</h3>
+                <button class="modal-close" onclick="fecharModal('modal-repor-estoque')"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-repor-estoque">
+                <div class="form-group">
+                    <label for="rep-item">Item Cadastrado *</label>
+                    <select id="rep-item" required>
+                        <option value="">Selecione o Item...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="rep-quantidade">Quantidade a Adicionar (Entrada física) *</label>
+                    <input type="number" id="rep-quantidade" min="1" placeholder="Ex: 10" required>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="fecharModal('modal-repor-estoque')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Repor Saldo</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

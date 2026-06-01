@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Command Center - Inteligência Macrologística</title>
+    <!-- Fontes Premium do Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome para Ícones Gamificados -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CSS Estilos RPG -->
+    <link rel="stylesheet" href="dashboard.css">
+</head>
+<body class="rpg-theme">
+    
+    <!-- CONSOLE DE NAVEGAÇÃO SUPERIOR -->
+    <header class="rpg-header">
+        <div class="header-logo">
+            <i class="fa-solid fa-crown gold-glow animate-bounce"></i>
+            <div>
+                <h1>LOGISTICS COMMAND</h1>
+                <p class="subtitle text-gold">Painel de Gestão Macrologística Integrada</p>
+            </div>
+        </div>
+        <div class="header-navigation">
+            <a href="index.html" class="rpg-btn btn-primary-rpg">
+                <i class="fa-solid fa-table-columns"></i> Voltar ao Kanban Operacional
+            </a>
+        </div>
+    </header>
+
+    <!-- CONTAINER PRINCIPAL -->
+    <main class="rpg-container">
+        
+        <!-- SEÇÃO: WIDGETS DE CONTEXTO E QUESTS (MÉTRICAS MACRO) -->
+        <section class="quests-grid">
+            
+            <!-- CARD 1: TOTAL DE TREINAMENTOS -->
+            <div class="quest-card card-total">
+                <div class="card-icon">
+                    <i class="fa-solid fa-scroll text-blue animate-pulse"></i>
+                </div>
+                <div class="card-info">
+                    <span class="quest-label">Demandas Ativas</span>
+                    <h2 class="quest-value" id="val-total-treinamentos">0</h2>
+                    <span class="quest-detail text-blue">Volume Total Cadastrado</span>
+                </div>
+                <div class="card-glow-line bg-blue"></div>
+            </div>
+
+            <!-- CARD 2: PEDIDOS A SEPARAR -->
+            <div class="quest-card card-a-separar">
+                <div class="card-icon">
+                    <i class="fa-solid fa-lock text-red"></i>
+                </div>
+                <div class="card-info">
+                    <span class="quest-label">A Separar (Pendente)</span>
+                    <h2 class="quest-value" id="val-a-separar">0</h2>
+                    <span class="quest-detail text-red">Sem Operador Vinculado</span>
+                </div>
+                <div class="card-glow-line bg-red"></div>
+            </div>
+
+            <!-- CARD 3: PEDIDOS EM SEPARAÇÃO -->
+            <div class="quest-card card-em-separacao">
+                <div class="card-icon">
+                    <div class="anvil-wrapper">
+                        <i class="fa-solid fa-hammer text-gold animate-forge"></i>
+                        <i class="fa-solid fa-screwdriver-wrench anvil-icon text-muted"></i>
+                    </div>
+                </div>
+                <div class="card-info">
+                    <span class="quest-label">Em Separação</span>
+                    <h2 class="quest-value" id="val-em-separacao">0</h2>
+                    <span class="quest-detail text-gold">Operadores em Atividade</span>
+                </div>
+                <div class="card-glow-line bg-gold"></div>
+            </div>
+
+            <!-- CARD 4: EM TREINAMENTO -->
+            <div class="quest-card card-em-treinamento">
+                <div class="card-icon">
+                    <i class="fa-solid fa-campground text-green animate-sway"></i>
+                </div>
+                <div class="card-info">
+                    <span class="quest-label">Em Execução / Campo</span>
+                    <h2 class="quest-value" id="val-em-treinamento">0</h2>
+                    <span class="quest-detail text-green">Kits e Treinamentos Ativos</span>
+                </div>
+                <div class="card-glow-line bg-green"></div>
+            </div>
+
+            <!-- CARD 5: REVERSAS PENDENTES -->
+            <div class="quest-card card-reversas">
+                <div class="card-icon">
+                    <i class="fa-solid fa-dungeon text-purple animate-portal"></i>
+                </div>
+                <div class="card-info">
+                    <span class="quest-label">Logística Reversa</span>
+                    <h2 class="quest-value" id="val-reversas">0</h2>
+                    <span class="quest-detail text-purple">Retornos Aguardando Triagem</span>
+                </div>
+                <div class="card-glow-line bg-purple"></div>
+            </div>
+
+        </section>
+
+        <!-- SEÇÃO: PIPELINE DE FLUXO DINÂMICO DE PEDIDOS -->
+        <section class="logistics-pipeline glass-rpg">
+            <div class="pipeline-header">
+                <h2><i class="fa-solid fa-route gold-text"></i> FLUXO OPERACIONAL DE ATIVOS E DEMANDAS</h2>
+                <p>Acompanhamento de tráfego físico e fluxo de pacotes pelas etapas da cadeia em tempo real.</p>
+            </div>
+            <div class="pipeline-track">
+                
+                <!-- ESTÁGIO 1: ENTRADA -->
+                <div class="pipeline-node" id="node-entrada">
+                    <div class="node-icon"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                    <div class="node-name">1. Demandas Criadas</div>
+                    <div class="node-count" id="count-stage-entrada">0</div>
+                </div>
+                
+                <div class="pipeline-connector" id="conn-c1">
+                    <div class="connector-line"></div>
+                    <div class="particle-container" id="particle-c1"></div>
+                </div>
+
+                <!-- ESTÁGIO 2: AGUARDANDO SEPARAÇÃO -->
+                <div class="pipeline-node" id="node-aguardando">
+                    <div class="node-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+                    <div class="node-name">2. Sem Operador</div>
+                    <div class="node-count" id="count-stage-aguardando">0</div>
+                </div>
+                
+                <div class="pipeline-connector" id="conn-c2">
+                    <div class="connector-line"></div>
+                    <div class="particle-container" id="particle-c2"></div>
+                </div>
+
+                <!-- ESTÁGIO 3: EM SEPARAÇÃO -->
+                <div class="pipeline-node" id="node-separacao">
+                    <div class="node-icon"><i class="fa-solid fa-boxes-packing"></i></div>
+                    <div class="node-name">3. Em Separação</div>
+                    <div class="node-count" id="count-stage-separacao">0</div>
+                </div>
+                
+                <div class="pipeline-connector" id="conn-c3">
+                    <div class="connector-line"></div>
+                    <div class="particle-container" id="particle-c3"></div>
+                </div>
+
+                <!-- ESTÁGIO 4: EM TREINAMENTO -->
+                <div class="pipeline-node" id="node-treinamento">
+                    <div class="node-icon"><i class="fa-solid fa-truck-fast"></i></div>
+                    <div class="node-name">4. Em Trânsito / Campo</div>
+                    <div class="node-count" id="count-stage-treinamento">0</div>
+                </div>
+                
+                <div class="pipeline-connector" id="conn-c4">
+                    <div class="connector-line"></div>
+                    <div class="particle-container" id="particle-c4"></div>
+                </div>
+
+                <!-- ESTÁGIO 5: LOGÍSTICA REVERSA -->
+                <div class="pipeline-node" id="node-reversa">
+                    <div class="node-icon"><i class="fa-solid fa-rotate-left"></i></div>
+                    <div class="node-name">5. Logística Reversa</div>
+                    <div class="node-count" id="count-stage-reversa">0</div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- SEÇÃO: DISPONIBILIDADE DO ESTOQUE -->
+        <section class="kingdom-vault glass-rpg">
+            <div class="vault-header">
+                <h2><i class="fa-solid fa-warehouse gold-text"></i> PAINEL GERAL DE DISPONIBILIDADE (ESTOQUE)</h2>
+                <p>Níveis de capacidade física em depósito e indicadores de saúde de abastecimento por item.</p>
+            </div>
+            
+            <div class="vault-grid">
+                
+                <!-- EQUIPAMENTOS -->
+                <div class="vault-column">
+                    <h3><i class="fa-solid fa-shield-cat text-blue"></i> Equipamentos de TI (Ativos)</h3>
+                    <div class="vault-list" id="equipamentos-list">
+                        <!-- Gerado dinamicamente -->
+                        <div class="loading-rpg">Carregando inventário...</div>
+                    </div>
+                </div>
+
+                <!-- INSUMOS -->
+                <div class="vault-column">
+                    <h3><i class="fa-solid fa-flask text-green"></i> Consumíveis & Insumos de Evento</h3>
+                    <div class="vault-list" id="insumos-list">
+                        <!-- Gerado dinamicamente -->
+                        <div class="loading-rpg">Carregando inventário...</div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- RODAPÉ RETRÔ -->
+    <footer class="rpg-footer">
+        <p>&copy; 2026 Logistics Command. Painel Macro de Decisão Logística e Alocação Preditiva.</p>
+        <p class="retro-status">SISTEMA DE AUDITORIA DE CAPACIDADE: <span class="text-green blink">ATIVO</span> &bull; INTEGRIDADE DOS DADOS: 100%</p>
+    </footer>
+
+    <!-- JS DO DASHBOARD -->
+    <script src="dashboard.js"></script>
+</body>
+</html>
