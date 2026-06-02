@@ -14,6 +14,15 @@ let kits = [];
 let estoque = [];
 let statusConexao = {};
 
+// Auxiliar para obter descrição amigável do catálogo
+function obterDescricaoMaterial(codigo) {
+    const eq = (equipamentos || []).find(e => e.codigo === codigo);
+    if (eq) return eq.descricao_do_equipamento;
+    const ins = (insumos || []).find(i => i.codigo === codigo);
+    if (ins) return ins.descricao_do_insumo;
+    return codigo;
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     inicializarNavegacaoAbas();
     inicializarSubAbasCadastro();
@@ -432,6 +441,21 @@ function renderizarKanban() {
         const tagClass = p.sla_violado ? "violado" : "cumprido";
         const tagText = p.sla_violado ? "SLA Violado" : "SLA OK";
         
+        // Agrupar itens repetidos para exibição limpa com quantidades no card
+        const eqItens = p.lista_de_equipamentos || [];
+        const insItens = p.lista_de_insumos || [];
+        const todosItens = [...eqItens, ...insItens];
+        
+        const contagemItens = {};
+        todosItens.forEach(item => {
+            contagemItens[item] = (contagemItens[item] || 0) + 1;
+        });
+        
+        const itensFormatados = Object.entries(contagemItens).map(([codigo, qtd]) => {
+            const desc = obterDescricaoMaterial(codigo);
+            return `${desc} (${qtd} un)`;
+        }).join(", ");
+        
         let cardHTML = `
             <div class="card-item-body">
                 <div class="card-header-info">
@@ -452,6 +476,15 @@ function renderizarKanban() {
                     <span>Data: ${p.data_treinamento}</span>
                 </div>
         `;
+        
+        if (itensFormatados) {
+            cardHTML += `
+                <div class="card-detail font-weight-500" style="color: #00e5ff; border-top: 1px solid rgba(255,255,255,0.03); padding-top: 6px; margin-top: 6px;">
+                    <i class="fa-solid fa-boxes-stacked"></i>
+                    <span style="font-size: 11px; line-height: 1.3;">Itens: <strong>${itensFormatados}</strong></span>
+                </div>
+            `;
+        }
         
         if (p.novos_insumos_solicitados) {
             cardHTML += `
@@ -991,14 +1024,7 @@ window.abrirExpedicao = (id_pedido) => {
         "Protocolo físico assinado"
     ];
     
-    // Auxiliar para obter descrição amigável do catálogo
-    function obterDescricaoMaterial(codigo) {
-        const eq = (equipamentos || []).find(e => e.codigo === codigo);
-        if (eq) return eq.descricao_do_equipamento;
-        const ins = (insumos || []).find(i => i.codigo === codigo);
-        if (ins) return ins.descricao_do_insumo;
-        return codigo;
-    }
+    // (Utiliza a função global obterDescricaoMaterial)
     
     // Obter os itens do pedido
     const eqItens = pedido.lista_de_equipamentos || [];
