@@ -991,6 +991,15 @@ window.abrirExpedicao = (id_pedido) => {
         "Protocolo físico assinado"
     ];
     
+    // Auxiliar para obter descrição amigável do catálogo
+    function obterDescricaoMaterial(codigo) {
+        const eq = (equipamentos || []).find(e => e.codigo === codigo);
+        if (eq) return eq.descricao_do_equipamento;
+        const ins = (insumos || []).find(i => i.codigo === codigo);
+        if (ins) return ins.descricao_do_insumo;
+        return codigo;
+    }
+    
     // Obter os itens do pedido
     const eqItens = pedido.lista_de_equipamentos || [];
     const insItens = pedido.lista_de_insumos || [];
@@ -1017,8 +1026,16 @@ window.abrirExpedicao = (id_pedido) => {
         checklistGrupo.appendChild(itemDiv);
     });
     
+    // Agrupar itens repetidos para exibição limpa com quantidades
+    const contagemItens = {};
+    todosItens.forEach(item => {
+        contagemItens[item] = (contagemItens[item] || 0) + 1;
+    });
+    
+    const itensUnicos = Object.keys(contagemItens);
+    
     // Se houver itens específicos no pedido, listar também para conferência do operador
-    if (todosItens.length > 0) {
+    if (itensUnicos.length > 0) {
         const headerItens = document.createElement("div");
         headerItens.style.fontWeight = "bold";
         headerItens.style.color = "#00e5ff";
@@ -1029,12 +1046,14 @@ window.abrirExpedicao = (id_pedido) => {
         headerItens.innerText = "📦 Conferência de Materiais do Pedido";
         checklistGrupo.appendChild(headerItens);
         
-        todosItens.forEach((item, idx) => {
+        itensUnicos.forEach((codigo, idx) => {
+            const qtd = contagemItens[codigo];
+            const descricao = obterDescricaoMaterial(codigo);
             const itemDiv = document.createElement("div");
             itemDiv.className = "checklist-item";
             itemDiv.innerHTML = `
-                <input type="checkbox" id="cb-item-${idx}" value="${item}">
-                <label for="cb-item-${idx}">Conferência física de: <strong>${item}</strong></label>
+                <input type="checkbox" id="cb-item-${idx}" value="${codigo}">
+                <label for="cb-item-${idx}">Conferência física de: <strong>${descricao} (${qtd} un)</strong></label>
             `;
             checklistGrupo.appendChild(itemDiv);
         });
